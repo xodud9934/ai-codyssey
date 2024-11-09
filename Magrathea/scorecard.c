@@ -2,80 +2,85 @@
 #include <stdlib.h>
 
 #define CANDIDATE_COUNT 6
-#define SCORE_COUNT 5 // 음악 소양, 댄스, 보컬, 비주얼, 전달력
+#define FIELD_COUNT 5    // 5개 분야 점수
+#define SCORE_COUNT (FIELD_COUNT + 1)  // 5개 분야 점수 + 총점
 
 int main() {
-    // 후보자 정보를 저장 [구조체 정의]
+    // 후보자 정보를 저장하기 위한 구조체 정의
     typedef struct {
         char name[50];
-        int id; // 고유 ID
+        int id; // 고유 ID, 중복되지 않는 6자리 정수
     } Candidate;
 
-    // 심사자 정보를 저장 [구조체 정의]
-    typedef struct {
-        char judge_name[50];
-        char specialty[20]; // 전문 분야
-    } Judge;
-
-    // 후보자 점수 시트를 저장[ 구조체 정의]
+    // 후보자 점수 시트를 저장하는 구조체 정의
     typedef struct {
         int id; // 후보자 고유 ID
-        int scores[SCORE_COUNT]; // 5개 점수
-        int total_score; // 총점
+        int scores[SCORE_COUNT]; // 5개 분야 점수 + 총점
     } ScoringSheet;
 
-    // 후보자 초기화 [name, 고유 ID]
+    // 후보자 초기화 (이름과 고유 ID)
     Candidate candidates[CANDIDATE_COUNT] = {
-        {"박지연", 123456},
-        {"Ethan Smith", 654321},
-        {"Helena Silva", 112233},
-        {"Liam Wilson", 223344},
-        {"김하린", 334455},
-        {"Chloe Nguyen", 445566}
+        {"박지연", 100001},
+        {"Ethan Smith", 100002},
+        {"Helena Silva", 100003},
+        {"Liam Wilson", 100004},
+        {"김하린", 100005},
+        {"Chloe Nguyen", 100006}
     };
 
     // 점수 시트 배열
     ScoringSheet scoring_sheets[CANDIDATE_COUNT] = { 0 };
 
-    // 심사자 정보 입력
-    Judge judge;
-    printf("심사자 이름을 입력하세요: ");
-    scanf_s("%s", judge.judge_name, (unsigned)_countof(judge.judge_name));
-    printf("심사자 전문 분야를 입력하세요(분야: 음악 소양, 댄스, 보컬, 비주얼, 전달력): ");
-    scanf_s("%s", judge.specialty, (unsigned)_countof(judge.specialty));
+    // 각 분야 이름
+    char* fields[FIELD_COUNT] = { "소양", "소양", "소양", "소양", "소양" };
 
-    // 심사 점수 입력
-    printf("####################################\n");
-    printf("#       오디션 심사 결과 입력       #\n");
-    printf("####################################\n");
-    printf("> 심사자 이름: %s\n", judge.judge_name);
-    printf("> 전문 분야: %s\n", judge.specialty);
-    printf("++++++++++++++++++++++++++++++++++++\n");
+    // 각 분야별 심사자 정보 입력
+    typedef struct {
+        char judge_name[50];
+        char specialty[50];
+    } Judge;
 
-    for (int i = 0; i < CANDIDATE_COUNT; i++) {
-        printf("후보자: %s\n", candidates[i].name);
-        printf("%s 점수: ", judge.specialty);
+    Judge judges[FIELD_COUNT];
 
-        int score;
-        while (1) {
-            scanf_s("%d", &score);
-            if (score >= 10 && score <= 100) break;
-            printf("잘못된 점수입니다. 다시 입력해 주세요 (10~100): ");
+    // 각 분야별 심사자 정보 입력
+    for (int i = 0; i < FIELD_COUNT; i++) {
+        printf("####################################\n");
+        printf("#       오디션 심사 결과 입력       #\n");
+        printf("####################################\n");
+        printf("> 심사자 이름: ");
+        scanf_s("%s", judges[i].judge_name, (unsigned)_countof(judges[i].judge_name));
+        printf("> 전문 분야(음악, 댄스, 보컬, 비주얼, 전달력): ");
+        scanf_s("%s", judges[i].specialty, (unsigned)_countof(judges[i].specialty));
+        printf("++++++++++++++++++++++++++++++++++++\n");
+
+        // 각 후보자에 대해 해당 분야의 점수 입력
+        for (int j = 0; j < CANDIDATE_COUNT; j++) {
+            int score;
+            printf("후보자: %s\n", candidates[j].name);
+            printf("%s %s: ", judges[i].specialty, fields[i]);
+            while (1) {
+                scanf_s("%d", &score);
+                if (score >= 10 && score <= 100) break;
+                printf("잘못된 점수입니다. 10~100 점 사이로 다시 입력해 주세요.\n");
+            }
+            scoring_sheets[j].id = candidates[j].id;
+            scoring_sheets[j].scores[i] = score;  // 각 분야 점수 저장
+            printf("------------------------------------\n");  // 후보자별 구분
         }
-
-        scoring_sheets[i].id = candidates[i].id;
-        scoring_sheets[i].scores[0] = score;
-        scoring_sheets[i].total_score = score; // 전문 분야 점수 초기화
-        printf("------------------------------------\n");
     }
 
-    // 완료 후 내용 검토
+    // 점수 입력 완료 후 검토
     printf("입력을 모두 완료했습니다.\n입력하신 내용을 검토하세요!\n");
     for (int i = 0; i < CANDIDATE_COUNT; i++) {
-        printf("%s: %d\n", candidates[i].name, scoring_sheets[i].total_score);
+        int total_score = 0;
+        for (int j = 0; j < FIELD_COUNT; j++) {
+            total_score += scoring_sheets[i].scores[j];  // 각 분야 점수 합산
+        }
+        scoring_sheets[i].scores[FIELD_COUNT] = total_score;  // 총점 저장
+        printf("%s: 총점 = %d\n", candidates[i].name, total_score);
     }
 
-    // 제출 확인
+    // 제출 여부 확인
     char submit;
     printf("제출하시겠습니까? (Y/N): ");
     while (1) {
@@ -89,18 +94,19 @@ int main() {
     }
     else {
         printf("처음으로 돌아갑니다...\n");
-        return 0; // 값
+        return 0; // 다시 시작하도록 main 종료
     }
 
-    // 최종 선발 기준 -> 총점 높은순서
+    // 총점 기준으로 후보자들 정렬 (내림차순)
     for (int i = 0; i < CANDIDATE_COUNT - 1; i++) {
         for (int j = i + 1; j < CANDIDATE_COUNT; j++) {
-            if (scoring_sheets[i].total_score < scoring_sheets[j].total_score) {
+            if (scoring_sheets[i].scores[FIELD_COUNT] < scoring_sheets[j].scores[FIELD_COUNT]) {
                 // ScoringSheet 스왑
                 ScoringSheet temp = scoring_sheets[i];
                 scoring_sheets[i] = scoring_sheets[j];
                 scoring_sheets[j] = temp;
 
+                // Candidate 스왑 (순서 맞추기 위해)
                 Candidate temp_candidate = candidates[i];
                 candidates[i] = candidates[j];
                 candidates[j] = temp_candidate;
@@ -108,6 +114,7 @@ int main() {
         }
     }
 
+    // 최종 선발 멤버 출력
     printf("=======================================\n");
     printf("후보 선발 결과 집계 중 ...\n");
     printf("=======================================\n");
@@ -115,9 +122,9 @@ int main() {
     printf("# 밀리웨이즈의 멤버가 된 걸축하합니다!  #\n");
     printf("#######################################\n");
 
-   // 1등부터 4등까지 출력
+    // 상위 4명 출력
     for (int i = 0; i < 4; i++) {
-        printf("%d. %s\n", i + 1, candidates[i].name);
+        printf("%d. %s (총점: %d)\n", i + 1, candidates[i].name, scoring_sheets[i].scores[FIELD_COUNT]);
     }
 
     return 0;
