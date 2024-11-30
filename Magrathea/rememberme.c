@@ -39,15 +39,17 @@ Candidate candidate_arr[CANDIDATE_COUNT] = {
 
 // 롤링페이퍼 메시지
 typedef struct {
-    char message[500];  // 한 후보자에 대한 누적 메시지 저장
+    char author[50];  // 작성자
+    char message[500];  // 메시지 내용
 } RollingPaper;
 
 // 각 후보자에 대한 롤링페이퍼 배열
-RollingPaper rollingpp[6];  // 합격 및 불합격 후보자들에 대한 메시지 배열
+RollingPaper rollingpp[CANDIDATE_COUNT][10];  // 각 후보자별로 최대 10개의 메시지 저장 가능
 
-// 후보자 배열에서 메시지 입력 및 출력 함수
+// 후보자 배열에서 메시지 입력 함수
 void inputMessages() {
     int choice;
+    char author[50];
     char message[200];
 
     // 메시지 전송 대상 선택
@@ -57,23 +59,31 @@ void inputMessages() {
     }
     printf("[0] 초기화면\n");
     scanf_s("%d", &choice);
-    printf("\n※알림※ %d번을 선택하셨습니다\n",choice);
+    printf("\n※알림※ %d번을 선택하셨습니다\n", choice);
 
     if (choice == 0) {
         printf("초기화면으로 돌아갑니다.\n");
         return;
     }
 
-    // 메시지 입력
+    // 메시지 작성자 입력
     if (choice >= 1 && choice <= CANDIDATE_COUNT) {
+        printf("메시지 작성자: ");
+        scanf_s("%s", author, sizeof(author));
+
+        // 메시지 내용 입력
         printf("%s에게 보낼 메시지를 입력하세요: ", candidate_arr[choice - 1].name);
         scanf_s(" %[^\n]", message, sizeof(message));  // 여러 단어 입력을 받기 위해 " " 포함
 
-        // 기존 메시지에 새로운 메시지 누적
-        if (strlen(rollingpp[choice - 1].message) > 0) {
-            strcat_s(rollingpp[choice - 1].message, sizeof(rollingpp[choice - 1].message), "\n");
+        // 새로운 메시지 추가
+        int msg_count = 0;
+        while (strlen(rollingpp[choice - 1][msg_count].message) > 0) {
+            msg_count++;  // 기존 메시지가 있는 위치로 이동
         }
-        strcat_s(rollingpp[choice - 1].message, sizeof(rollingpp[choice - 1].message), message);
+
+        // 작성된 메시지 저장
+        strcpy_s(rollingpp[choice - 1][msg_count].author, sizeof(rollingpp[choice - 1][msg_count].author), author);
+        strcpy_s(rollingpp[choice - 1][msg_count].message, sizeof(rollingpp[choice - 1][msg_count].message), message);
     }
     else {
         printf("잘못된 선택입니다.\n");
@@ -97,7 +107,15 @@ void printMessages() {
     }
 
     if (choice >= 1 && choice <= CANDIDATE_COUNT) {
-        printf("%s에게 보낸 메시지: \s%s\n", candidate_arr[choice - 1].name, rollingpp[choice - 1].message);
+        printf("\n###################\n");
+        printf("%s 롤링 페이퍼\n", candidate_arr[choice - 1].name);
+        printf("###################\n");
+        for (int i = 0; i < 10; i++) {
+            if (strlen(rollingpp[choice - 1][i].message) > 0) {
+                printf("----------------------------------------------------------------------------------------------------------\n");
+                printf("%s: %s\n", rollingpp[choice - 1][i].author, rollingpp[choice - 1][i].message);
+            }
+        }
     }
     else {
         printf("잘못된 선택입니다.\n");
